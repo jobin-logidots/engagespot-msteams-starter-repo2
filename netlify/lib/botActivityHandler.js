@@ -1,5 +1,5 @@
 const { TurnContext, TeamsActivityHandler } = require("botbuilder");
-import { EngagespotClient } from "@engagespot/node";
+const { EngagespotClient } = require("@engagespot/node");
 
 class BotActivityHandler extends TeamsActivityHandler {
   constructor() {
@@ -11,8 +11,8 @@ class BotActivityHandler extends TeamsActivityHandler {
       const text = context.activity.text.trim().toLocaleLowerCase();
       if (text.includes("add-user") || text.includes("add-channel")) {
         await this.updateEngagespotProfile(context);
-      } else if (text === "test") {
-        await context.sendActivity(`Your bot has been successfully added.`);
+      } else{
+        await context.sendActivity(`Your bot has been successfully added. Please use add-user or add-channel  command for configure Notification`);
       }
 
       await next();
@@ -27,10 +27,8 @@ class BotActivityHandler extends TeamsActivityHandler {
       }
     } = context.activity;
     let profile = {
-      ms_teams: {
-        tenant_id,
-        service_url
-      }
+        ms_teams_tenant_id :tenant_id,
+        ms_teams_service_url : service_url
     };
     const text = context.activity.text.trim();
     const [cmd, recipientId] = text.split(" ");
@@ -42,9 +40,9 @@ class BotActivityHandler extends TeamsActivityHandler {
         );
         return;
       }
-      profile.ms_teams.channel_id = context.activity.channelData.channel.id;
+      profile.ms_teams_channel_id = context.activity.channelData.channel.id;
     } else if (cmd.toLowerCase() === "add-user") {
-      profile.ms_teams.user_id = context.activity.from.id;
+      profile.ms_teams_user_id = context.activity.from.id;
     } else {
       await context.sendActivity(
         `Could not update Engagespot Profile for ${recipientId}.`
@@ -58,6 +56,7 @@ class BotActivityHandler extends TeamsActivityHandler {
         apiSecret: process.env.ENGAGESPOT_API_SECRET
       });
       //Creating or Updating a user
+      console.log(profile);
       client.createOrUpdateUser(recipientId,
         profile
       );
